@@ -6,6 +6,7 @@
 #          'socket' from the library
 
 require 'socket'
+require 'optparse'
 
 
 # get current date (YearMonthDay) as integer, used as Serial for the Zone-files
@@ -84,28 +85,23 @@ $TTL	604800
 textTest.close
 end
 
-# main proofs parameters and execute the previous functions
-def main
-usage = 'USAGE : \'Lookup.rb <domainname> <cidre>\''
+begin
+	optparse.parse!
+	mandatory = [:domain, :cidre]
+	missing = mandatory.select{ |param| options[param].nil?}
+	if not missing.empty?
+		puts "Missing options: #{missing.join(', ')}"
+		puts optparse
+		exit
+	end
 
-
-soa = ARGV[0].to_s
-cidre = ARGV[1].to_i
-if ARGV.length != 2 || ARGV[1].to_i == 0 || ARGV[1].to_i > 32
-	puts usage
-
-else
-
-	datum
-	ip = get_own_ip
-	get_arpa(cidre,ip)
-	forward_zone(soa)
-	arpa = get_arpa(cidre,ip)
-	reverse_zone(soa,arpa)
+rescue OptionParser::InvalidOption, OptionParser::MissingArgument
+	puts $!.to_s
+	puts optparse
+	exit
 end
 
-	
-end
-main
+
+puts "Generate Bind-Files: #{options.inspect}"
 
 
